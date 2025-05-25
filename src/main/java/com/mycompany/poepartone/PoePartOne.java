@@ -1,4 +1,6 @@
 // PoePartOne.java
+//part 2 assighnment
+
 package com.mycompany.poepartone;
 
 import javax.swing.*;
