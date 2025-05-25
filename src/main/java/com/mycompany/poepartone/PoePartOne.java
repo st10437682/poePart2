@@ -97,10 +97,41 @@ public class PoePartOne {
         String loginPassword = JOptionPane.showInputDialog("Enter password:");
 
         Login login = new Login(app.username, app.password);
+
         if (login.loginUser(loginUsername, loginPassword)) {
-            app.sendMessageFlow();
-        } else {
+            while (true) {
+                String menu = JOptionPane.showInputDialog("Welcome to QuickChat\n\nSelect an option:\n1) Send Message\n2) Show Recently Sent Messages\n3) Quit");
+
+
+                switch (menu) {
+                    case "1":
+                        app.sendMessageFlow();
+                        break;
+                    case "2":
+                        if (app.sentMessages.isEmpty()) {
+                            JOptionPane.showMessageDialog(null, "No messages have been sent yet.");
+                        } else {
+                            StringBuilder sb = new StringBuilder();
+                            for (Message m : app.sentMessages) {
+                                sb.append(m.printMessage()).append("");
+                            }
+                            JOptionPane.showMessageDialog(null, sb.toString());
+                        }
+                        break;
+                    case "3":
+                        JOptionPane.showMessageDialog(null, "Goodbye!");
+                        System.exit(0);
+                        break;
+                    default:
+                        JOptionPane.showMessageDialog(null, "Invalid choice. Please enter 1, 2, or 3.");
+                        break;
+                }
+            }
+        } else{
             JOptionPane.showMessageDialog(null, "Login failed.");
         }
     }
-}
+        }
+         
+    
+
