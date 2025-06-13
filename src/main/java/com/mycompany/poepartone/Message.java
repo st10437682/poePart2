@@ -1,12 +1,18 @@
-// Message.java
+// Updated Message.java
 package com.mycompany.poepartone;
 
-public class Message {
+import java.io.Serializable;
+
+public class Message implements Serializable {
     private static int counter = 0;
+
     private String messageID;
     private String recipient;
     private String messageText;
     private String messageHash;
+
+    // Default constructor for JSON deserialization
+    public Message() {}
 
     public Message(String recipient, String messageText) {
         counter++;
@@ -21,7 +27,7 @@ public class Message {
     }
 
     public boolean checkRecipientCell() {
-        return recipient != null && recipient.matches("^\\+\\d{10}$");
+        return recipient != null && recipient.matches("^\\+\\d{10,12}$");
     }
 
     public String createMessageHash() {
@@ -53,4 +59,4 @@ public class Message {
                "\nRecipient: " + recipient +
                "\nMessage: " + messageText;
     }
-}
+} 

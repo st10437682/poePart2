@@ -1,17 +1,25 @@
-// PoePartOne.java
-//part 2 assighnment
-
+// Updated PoePartOne.java
 package com.mycompany.poepartone;
 
 import javax.swing.*;
-import java.util.ArrayList;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.io.*;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 public class PoePartOne {
     private String username;
     private String password;
     private String cellPhoneNumber;
+
     private ArrayList<Message> sentMessages = new ArrayList<>();
+    private ArrayList<Message> disregardedMessages = new ArrayList<>();
+    private ArrayList<Message> storedMessages = new ArrayList<>();
+    private ArrayList<String> messageHashes = new ArrayList<>();
+    private ArrayList<String> messageIDs = new ArrayList<>();
+
+    private final String JSON_FILE = "storedMessages.json";
 
     public boolean checkUserName(String username) {
         return username != null && !username.isEmpty() && username.contains("_") && username.length() <= 5;
@@ -27,7 +35,7 @@ public class PoePartOne {
 
     public boolean checkCellPhoneNumber(String cellPhoneNumber) {
         return cellPhoneNumber != null && !cellPhoneNumber.isEmpty() &&
-                Pattern.matches("^\\+27\\d{9,10}$", cellPhoneNumber);
+                Pattern.matches("^\\+27\\d{9}$", cellPhoneNumber);
     }
 
     public String registerUser(String username, String password, String cellPhoneNumber) {
@@ -48,11 +56,10 @@ public class PoePartOne {
 
     public void sendMessageFlow() {
         JOptionPane.showMessageDialog(null, "Welcome to QuickChat.");
-
         int numMessages = Integer.parseInt(JOptionPane.showInputDialog("How many messages do you want to send?"));
 
         for (int i = 0; i < numMessages; i++) {
-            String recipient = JOptionPane.showInputDialog("Enter recipient cell number (+XXXXXXXXXX):");
+            String recipient = JOptionPane.showInputDialog("Enter recipient cell number (+XXXXXXXXXXX):");
             String text = JOptionPane.showInputDialog("Enter message (max 250 characters):");
 
             if (text.length() > 250) {
@@ -66,19 +73,86 @@ public class PoePartOne {
 
             if (option == JOptionPane.YES_OPTION) {
                 sentMessages.add(msg);
+                messageIDs.add(msg.getMessageID());
+                messageHashes.add(msg.getMessageHash());
                 JOptionPane.showMessageDialog(null, "Message successfully sent.");
             } else if (option == JOptionPane.CANCEL_OPTION) {
-                JOptionPane.showMessageDialog(null, "Message stored for later (not implemented)." );
+                storedMessages.add(msg);
+                saveStoredMessages();
+                JOptionPane.showMessageDialog(null, "Message stored for later.");
             } else {
+                disregardedMessages.add(msg);
                 JOptionPane.showMessageDialog(null, "Message disregarded.");
             }
         }
+    }
 
-        JOptionPane.showMessageDialog(null, "Total messages sent: " + sentMessages.size());
+    public void saveStoredMessages() {
+        try (Writer writer = new FileWriter(JSON_FILE)) {
+            new Gson().toJson(storedMessages, writer);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Failed to save stored messages.");
+        }
+    }
+
+    public void loadStoredMessages() {
+        try (Reader reader = new FileReader(JSON_FILE)) {
+            storedMessages = new Gson().fromJson(reader, new TypeToken<ArrayList<Message>>() {}.getType());
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "No stored messages to load.");
+        }
+    }
+
+    public void displayLongestMessage() {
+        Message longest = sentMessages.stream().max(Comparator.comparingInt(m -> m.getMessageText().length())).orElse(null);
+        if (longest != null) JOptionPane.showMessageDialog(null, "Longest message:\n" + longest.printMessage());
+        else JOptionPane.showMessageDialog(null, "No messages sent.");
+    }
+
+    public void searchByMessageID(String id) {
+        for (Message m : sentMessages) {
+            if (m.getMessageID().equals(id)) {
+                JOptionPane.showMessageDialog(null, "Found:\nRecipient: " + m.getRecipient() + "\nMessage: " + m.getMessageText());
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(null, "Message ID not found.");
+    }
+
+    public void searchByRecipient(String recipient) {
+        StringBuilder sb = new StringBuilder();
+        for (Message m : sentMessages) {
+            if (m.getRecipient().equals(recipient)) {
+                sb.append(m.printMessage()).append("\n\n");
+            }
+        }
+        JOptionPane.showMessageDialog(null, sb.length() > 0 ? sb.toString() : "No messages to that recipient.");
+    }
+
+    public void deleteByHash(String hash) {
+        Iterator<Message> it = sentMessages.iterator();
+        while (it.hasNext()) {
+            Message m = it.next();
+            if (m.getMessageHash().equals(hash)) {
+                it.remove();
+                JOptionPane.showMessageDialog(null, "Message \"" + m.getMessageText() + "\" successfully deleted.");
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(null, "No message found with that hash.");
+    }
+
+    public void displayReport() {
+        StringBuilder sb = new StringBuilder("--- Sent Message Report ---\n");
+        for (Message m : sentMessages) {
+            sb.append(m.printMessage()).append("\n\n");
+        }
+        JOptionPane.showMessageDialog(null, sb.toString());
     }
 
     public static void main(String[] args) {
         PoePartOne app = new PoePartOne();
+        app.loadStoredMessages();
 
         JOptionPane.showMessageDialog(null, "Registration:");
         while (true) {
@@ -102,38 +176,21 @@ public class PoePartOne {
 
         if (login.loginUser(loginUsername, loginPassword)) {
             while (true) {
-                String menu = JOptionPane.showInputDialog("Welcome to QuickChat\n\nSelect an option:\n1) Send Message\n2) Show Recently Sent Messages\n3) Quit");
-
-
+                String menu = JOptionPane.showInputDialog("Welcome to QuickChat\n\nSelect an option:\n1) Send Message\n2) View Sent Messages\n3) View Longest Message\n4) Search by Message ID\n5) Search by Recipient\n6) Delete by Message Hash\n7) Display Report\n8) Quit");
                 switch (menu) {
-                    case "1":
-                        app.sendMessageFlow();
-                        break;
-                    case "2":
-                        if (app.sentMessages.isEmpty()) {
-                            JOptionPane.showMessageDialog(null, "No messages have been sent yet.");
-                        } else {
-                            StringBuilder sb = new StringBuilder();
-                            for (Message m : app.sentMessages) {
-                                sb.append(m.printMessage()).append("");
-                            }
-                            JOptionPane.showMessageDialog(null, sb.toString());
-                        }
-                        break;
-                    case "3":
-                        JOptionPane.showMessageDialog(null, "Goodbye!");
-                        System.exit(0);
-                        break;
-                    default:
-                        JOptionPane.showMessageDialog(null, "Invalid choice. Please enter 1, 2, or 3.");
-                        break;
+                    case "1": app.sendMessageFlow(); break;
+                    case "2": app.displayReport(); break;
+                    case "3": app.displayLongestMessage(); break;
+                    case "4": app.searchByMessageID(JOptionPane.showInputDialog("Enter Message ID:")); break;
+                    case "5": app.searchByRecipient(JOptionPane.showInputDialog("Enter Recipient Number:")); break;
+                    case "6": app.deleteByHash(JOptionPane.showInputDialog("Enter Message Hash:")); break;
+                    case "7": app.displayReport(); break;
+                    case "8": System.exit(0); break;
+                    default: JOptionPane.showMessageDialog(null, "Invalid choice.");
                 }
             }
-        } else{
+        } else {
             JOptionPane.showMessageDialog(null, "Login failed.");
         }
     }
-        }
-         
-    
-
+}
