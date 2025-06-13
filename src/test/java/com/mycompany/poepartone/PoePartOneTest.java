@@ -1,149 +1,96 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/UnitTests/JUnit5TestClass.java to edit this template
- 
 package com.mycompany.poepartone;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.AfterAll;
+// Import necessary libraries for testing with JUnit 5
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 
+// This is a test class for the PoePartOne application
 public class PoePartOneTest {
+    private PoePartOne app;
 
-    public PoePartOneTest() {
-    }
-
-    @BeforeAll
-    public static void setUpClass() throws Exception {
-    }
-
-    @AfterAll
-    public static void tearDownClass() throws Exception {
-    }
-
+    // This method runs before each test to set up a fresh instance of the app
     @BeforeEach
-    public void setUp() throws Exception {
+    void setUp() {
+        app = new PoePartOne(); // Create a new instance of the main application class
     }
 
-    @AfterEach
-    public void tearDown() throws Exception {
-    }
-
-    @BeforeAll
-    public static void setUpClass() {
-
-    }
-
-    @AfterAll
-    public static void tearDownClass() {
-    }
-
-    @BeforeEach
-    public void setUp() {
-    }
-
-    @AfterEach
-    public void tearDown() {
-    }
-
-    
+    // Test to check that the method can correctly find the longest message
     @Test
-    public void testCheckUserName() {
-        System.out.println("checkUserName");
-        String username = "";
-        PoePartOne instance = new PoePartOne();
-        boolean expResult = false;
-        boolean result = instance.checkUserName(username);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    void testLongestMessage() {
+        // Add two messages: one short, one long
+        app.getSentMessages().add(new Message("+27831234567", "Short message"));
+        app.getSentMessages().add(new Message("+27831234567", "This is a much longer message than the first one."));
+
+        // Find the longest message by comparing message text lengths
+        Message longest = app.getSentMessages().stream().max((m1, m2) ->
+                Integer.compare(m1.getMessageText().length(), m2.getMessageText().length())).orElse(null);
+
+        // Ensure a message was found and check that it's the expected one
+        assertNotNull(longest);
+        assertEquals("This is a much longer message than the first one.", longest.getMessageText());
     }
 
-    /
+    // Test to verify you can search for a message by its unique ID
     @Test
-    public void testCheckPasswordComplexity() {
-        System.out.println("checkPasswordComplexity");
-        String password = "";
-        PoePartOne instance = new PoePartOne();
-        boolean expResult = false;
-        boolean result = instance.checkPasswordComplexity(password);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    void testSearchByMessageID() {
+        // Create a message and add it to the app
+        Message msg = new Message("+27830000000", "Testing message ID");
+        app.getSentMessages().add(msg);
+
+        // Store the message ID for searching
+        String targetID = msg.getMessageID();
+
+        // Search for a message with that ID in the sent messages list
+        boolean found = app.getSentMessages().stream().anyMatch(m -> m.getMessageID().equals(targetID));
+
+        // Confirm the message was found
+        assertTrue(found);
     }
 
-   
+    // Test to count how many messages were sent to a specific recipient
     @Test
-    public void testCheckCellPhoneNumber() {
-        System.out.println("checkCellPhoneNumber");
-        String cellPhoneNumber = "";
-        PoePartOne instance = new PoePartOne();
-        boolean expResult = false;
-        boolean result = instance.checkCellPhoneNumber(cellPhoneNumber);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    void testSearchByRecipient() {
+        // Add two messages to the same recipient and one to a different one
+        app.getSentMessages().add(new Message("+27831111111", "Hello 1"));
+        app.getSentMessages().add(new Message("+27831111111", "Hello 2"));
+        app.getSentMessages().add(new Message("+27832222222", "Different recipient"));
+
+        // Count how many messages went to +27831111111
+        long count = app.getSentMessages().stream()
+            .filter(m -> m.getRecipient().equals("+27831111111"))
+            .count();
+
+        // There should be exactly 2
+        assertEquals(2, count);
     }
 
-    
+    // Test to check if a message can be deleted using its hash value
     @Test
-    public void testRegisterUser() {
-        System.out.println("registerUser");
-        String username = "";
-        String password = "";
-        String cellPhoneNumber = "";
-        PoePartOne instance = new PoePartOne();
-        String expResult = "";
-        String result = instance.registerUser(username, password, cellPhoneNumber);
-        assertEquals(expResult, result);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
+    void testDeleteByHash() {
+        // Create a message and add it to the sent messages
+        Message msg = new Message("+27839999999", "To be deleted");
+        app.getSentMessages().add(msg);
+
+        // Get its hash and use it to delete the message
+        String hash = msg.getMessageHash();
+        app.deleteByHash(hash);
+
+        // Check that the message no longer exists in the list
+        boolean stillExists = app.getSentMessages().stream().anyMatch(m -> m.getMessageHash().equals(hash));
+        assertFalse(stillExists); // The message should be deleted
     }
 
-    /
+    // Test to ensure the message hash is formatted correctly
     @Test
-    public void **testLoginUser_validCredentials**() { // Renamed test method
-        System.out.println("loginUser");
-        // Set up test data and assertions here
-        String username = "test_user";
-        String password = "Password123!";
-        PoePartOne instance = new PoePartOne();
-        instance.registerUser(username, password, "+27811234567"); // Assuming registration works
-        boolean expResult = true;
-        boolean result = instance.loginUser(username, password);
-        assertEquals(expResult, result);
-        // Remove the fail line once you implement the actual test
-        // fail("Test case is a prototype.");
-    }
+    void testMessageHashFormat() {
+        // Create a message and retrieve its hash
+        Message msg = new Message("+27837777777", "Hey you!");
+        String hash = msg.getMessageHash();
 
-    /
-    @Test
-    public void **testReturnLoginStatus_successfulLogin**() { // Renamed test method
-        System.out.println("returnLoginStatus");
-        // Set up test data and assertions here
-        String username = "test_user";
-        String password = "Password123!";
-        PoePartOne instance = new PoePartOne();
-        instance.registerUser(username, password, "+27811234567"); // Assuming registration works
-        String expResult = "Welcome test_user, it is great to see you again.";
-        String result = instance.returnLoginStatus(username, password);
-        assertEquals(expResult, result);
-        // Remove the fail line once you implement the actual test
-        // fail("Test case is a prototype.");
+        // Confirm the hash matches the expected pattern (e.g., 00:1:HEYYOU!)
+        assertTrue(hash.matches("^\\d{2}:\\d+:\\w+\\w+$"));
     }
-
-    
-    @Test
-    public void testMain() {
-        System.out.println("main");
-        String[] args = null;
-        PoePartOne.main(args);
-        // TODO review the generated test code and remove the default call to fail.
-        fail("The test case is a prototype.");
-    }
-
-}*/
+}

@@ -1,4 +1,4 @@
-// Updated PoePartOne.java
+// Updated PoePartOne.java with high-school-level comments
 package com.mycompany.poepartone;
 
 import javax.swing.*;
@@ -8,23 +8,34 @@ import java.io.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+// This is the main class where the chat app starts and runs
 public class PoePartOne {
+    // Variables to store the user's login details
     private String username;
     private String password;
     private String cellPhoneNumber;
 
-    private ArrayList<Message> sentMessages = new ArrayList<>();
-    private ArrayList<Message> disregardedMessages = new ArrayList<>();
-    private ArrayList<Message> storedMessages = new ArrayList<>();
-    private ArrayList<String> messageHashes = new ArrayList<>();
-    private ArrayList<String> messageIDs = new ArrayList<>();
+    // Arrays to keep track of different types of messages
+    ArrayList<Message> sentMessages = new ArrayList<>(); // messages that were sent
+    private ArrayList<Message> disregardedMessages = new ArrayList<>(); // messages skipped
+    private ArrayList<Message> storedMessages = new ArrayList<>(); // messages saved for later
+    private ArrayList<String> messageHashes = new ArrayList<>(); // stores hash codes of messages
+    private ArrayList<String> messageIDs = new ArrayList<>(); // stores message IDs
 
+    // Allows test files to access sent messages
+    public List<Message> getSentMessages() {
+        return sentMessages;
+    }
+
+    // File where stored messages will be saved as JSON
     private final String JSON_FILE = "storedMessages.json";
 
+    // Checks if username is valid (must have an underscore and max 5 characters)
     public boolean checkUserName(String username) {
         return username != null && !username.isEmpty() && username.contains("_") && username.length() <= 5;
     }
 
+    // Checks if password is strong (has capital letter, number, special character, min 8 chars)
     public boolean checkPasswordComplexity(String password) {
         return password != null &&
                 password.length() >= 8 &&
@@ -33,11 +44,13 @@ public class PoePartOne {
                 Pattern.compile("[^a-zA-Z0-9]").matcher(password).find();
     }
 
+    // Checks if phone number is correctly formatted with +27 and 9 digits
     public boolean checkCellPhoneNumber(String cellPhoneNumber) {
         return cellPhoneNumber != null && !cellPhoneNumber.isEmpty() &&
                 Pattern.matches("^\\+27\\d{9}$", cellPhoneNumber);
     }
 
+    // This method handles user registration and validation
     public String registerUser(String username, String password, String cellPhoneNumber) {
         if (!checkUserName(username)) {
             return "Username is not correctly formatted, please ensure that your username contains an underscore and is no more than five characters in length.";
@@ -54,6 +67,7 @@ public class PoePartOne {
         return "Username successfully captured.\nPassword successfully captured.\nCell phone number successfully added.";
     }
 
+    // This is the flow for sending messages
     public void sendMessageFlow() {
         JOptionPane.showMessageDialog(null, "Welcome to QuickChat.");
         int numMessages = Integer.parseInt(JOptionPane.showInputDialog("How many messages do you want to send?"));
@@ -87,6 +101,7 @@ public class PoePartOne {
         }
     }
 
+    // This method saves stored messages to a JSON file
     public void saveStoredMessages() {
         try (Writer writer = new FileWriter(JSON_FILE)) {
             new Gson().toJson(storedMessages, writer);
@@ -95,6 +110,7 @@ public class PoePartOne {
         }
     }
 
+    // This method loads messages from the JSON file
     public void loadStoredMessages() {
         try (Reader reader = new FileReader(JSON_FILE)) {
             storedMessages = new Gson().fromJson(reader, new TypeToken<ArrayList<Message>>() {}.getType());
@@ -103,12 +119,14 @@ public class PoePartOne {
         }
     }
 
+    // This method finds and shows the longest message that was sent
     public void displayLongestMessage() {
         Message longest = sentMessages.stream().max(Comparator.comparingInt(m -> m.getMessageText().length())).orElse(null);
         if (longest != null) JOptionPane.showMessageDialog(null, "Longest message:\n" + longest.printMessage());
         else JOptionPane.showMessageDialog(null, "No messages sent.");
     }
 
+    // This lets the user search for a message by its ID
     public void searchByMessageID(String id) {
         for (Message m : sentMessages) {
             if (m.getMessageID().equals(id)) {
@@ -119,6 +137,7 @@ public class PoePartOne {
         JOptionPane.showMessageDialog(null, "Message ID not found.");
     }
 
+    // This searches for all messages sent to a specific recipient
     public void searchByRecipient(String recipient) {
         StringBuilder sb = new StringBuilder();
         for (Message m : sentMessages) {
@@ -129,6 +148,7 @@ public class PoePartOne {
         JOptionPane.showMessageDialog(null, sb.length() > 0 ? sb.toString() : "No messages to that recipient.");
     }
 
+    // This deletes a message from the list using its hash code
     public void deleteByHash(String hash) {
         Iterator<Message> it = sentMessages.iterator();
         while (it.hasNext()) {
@@ -142,6 +162,7 @@ public class PoePartOne {
         JOptionPane.showMessageDialog(null, "No message found with that hash.");
     }
 
+    // This displays a report of all the messages that were sent
     public void displayReport() {
         StringBuilder sb = new StringBuilder("--- Sent Message Report ---\n");
         for (Message m : sentMessages) {
@@ -150,6 +171,7 @@ public class PoePartOne {
         JOptionPane.showMessageDialog(null, sb.toString());
     }
 
+    // This is where the app starts running
     public static void main(String[] args) {
         PoePartOne app = new PoePartOne();
         app.loadStoredMessages();
